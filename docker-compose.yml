@@ -1,0 +1,65 @@
+# ============================================================
+# PulseTrace — Docker Compose (Development)
+# ============================================================
+# Start the full development stack with:
+#   docker compose up -d
+#
+# This brings up:
+#   - PostgreSQL 16 (ShakthiDB) on port 5432
+#   - FastAPI Backend on port 8000
+#
+# The agent runs outside Docker (on the host or target machine)
+# to collect real system metrics.
+# ============================================================
+
+services:
+  # ---- PostgreSQL (ShakthiDB) ----
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulsetrace-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulsetrace}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_use_strong_password}
+      POSTGRES_DB: ${POSTGRES_DB:-shakthidb}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Persist data across container restarts
+      - pgdata:/var/lib/postgresql/data
+      # Initialize schema on first run
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsetrace} -d ${POSTGRES_DB:-shakthidb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---- FastAPI Backend ----
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: pulsetrace-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pulsetrace}:${POSTGRES_PASSWORD:-changeme_use_strong_password}@postgres:5432/${POSTGRES_DB:-shakthidb}
+      API_KEY: ${API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  pgdata:
+    driver: local

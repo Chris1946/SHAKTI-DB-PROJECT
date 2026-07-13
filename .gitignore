@@ -1,0 +1,74 @@
+# ============================================================
+# PulseTrace .gitignore
+# ============================================================
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Node.js / Frontend ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# ---- Environment & Secrets ----
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ---- Database ----
+*.sql.bak
+pgdata/
+
+# ---- Docker ----
+docker-compose.override.yml
+
+# ---- IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Testing ----
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- eBPF build artifacts ----
+ebpf/programs/*.o
+ebpf/programs/*.skel.h

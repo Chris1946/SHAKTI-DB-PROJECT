@@ -1,0 +1,220 @@
+"""
+PulseTrace Backend — SQLAlchemy ORM Models
+
+These models map directly to the PostgreSQL tables defined in
+database/schema.sql. They use SQLAlchemy 2.0 declarative style
+with mapped_column for explicit type annotations.
+
+All models inherit from a shared Base class for consistent
+table metadata management.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Double,
+    Integer,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    """Shared base class for all ORM models."""
+
+    pass
+
+
+class SystemMetric(Base):
+    """System-level metrics collected at each interval.
+
+    One row per collection interval per hostname. This is the
+    primary metrics table that drives the dashboard.
+    """
+
+    __tablename__ = "system_metrics"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    # CPU
+    cpu_percent: Mapped[float | None] = mapped_column(Double)
+    cpu_per_core: Mapped[dict | None] = mapped_column(JSONB)
+    cpu_freq_mhz: Mapped[float | None] = mapped_column(Double)
+
+    # Load averages
+    load_avg_1: Mapped[float | None] = mapped_column(Double)
+    load_avg_5: Mapped[float | None] = mapped_column(Double)
+    load_avg_15: Mapped[float | None] = mapped_column(Double)
+
+    # Memory
+    memory_total: Mapped[int | None] = mapped_column(BigInteger)
+    memory_used: Mapped[int | None] = mapped_column(BigInteger)
+    memory_available: Mapped[int | None] = mapped_column(BigInteger)
+    memory_percent: Mapped[float | None] = mapped_column(Double)
+    swap_total: Mapped[int | None] = mapped_column(BigInteger)
+    swap_used: Mapped[int | None] = mapped_column(BigInteger)
+    swap_percent: Mapped[float | None] = mapped_column(Double)
+
+    # Disk
+    disk_total: Mapped[int | None] = mapped_column(BigInteger)
+    disk_used: Mapped[int | None] = mapped_column(BigInteger)
+    disk_free: Mapped[int | None] = mapped_column(BigInteger)
+    disk_percent: Mapped[float | None] = mapped_column(Double)
+    disk_read_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    disk_write_bytes: Mapped[int | None] = mapped_column(BigInteger)
+
+    # Network
+    net_bytes_sent: Mapped[int | None] = mapped_column(BigInteger)
+    net_bytes_recv: Mapped[int | None] = mapped_column(BigInteger)
+    net_packets_sent: Mapped[int | None] = mapped_column(BigInteger)
+    net_packets_recv: Mapped[int | None] = mapped_column(BigInteger)
+    net_errin: Mapped[int | None] = mapped_column(BigInteger, default=0)
+    net_errout: Mapped[int | None] = mapped_column(BigInteger, default=0)
+    net_dropin: Mapped[int | None] = mapped_column(BigInteger, default=0)
+    net_dropout: Mapped[int | None] = mapped_column(BigInteger, default=0)
+
+    # Extensibility
+    extra: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<SystemMetric(id={self.id}, host={self.hostname}, "
+            f"cpu={self.cpu_percent}%, mem={self.memory_percent}%)>"
+        )
+
+
+class ProcessMetric(Base):
+    """Per-process metrics captured at each collection interval.
+
+    Stores the top N processes by CPU and memory usage for
+    root cause analysis.
+    """
+
+    __tablename__ = "process_metrics"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    pid: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str | None] = mapped_column(String(255))
+    username: Mapped[str | None] = mapped_column(String(255))
+    status: Mapped[str | None] = mapped_column(String(50))
+    cpu_percent: Mapped[float | None] = mapped_column(Double)
+    memory_percent: Mapped[float | None] = mapped_column(Double)
+    memory_rss: Mapped[int | None] = mapped_column(BigInteger)
+    num_threads: Mapped[int | None] = mapped_column(Integer)
+    command: Mapped[str | None] = mapped_column(Text)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ProcessMetric(id={self.id}, pid={self.pid}, "
+            f"name={self.name}, cpu={self.cpu_percent}%)>"
+        )
+
+
+class Alert(Base):
+    """Alerts generated by the rule engine or AI anomaly detection.
+
+    Alerts track threshold violations and anomalies with their
+    resolution status.
+    """
+
+    __tablename__ = "alerts"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    metric_value: Mapped[float | None] = mapped_column(Double)
+    threshold: Mapped[float | None] = mapped_column(Double)
+    source: Mapped[str] = mapped_column(String(50), nullable=False, default="rule_engine")
+    resolved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        return (
+            f"<Alert(id={self.id}, severity={self.severity}, "
+            f"category={self.category}, resolved={self.resolved})>"
+        )
+
+
+class Prediction(Base):
+    """AI engine outputs: anomaly scores, forecasts, root cause results.
+
+    Populated by Phase 3 AI module.
+    """
+
+    __tablename__ = "predictions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    model_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    prediction_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    category: Mapped[str | None] = mapped_column(String(50))
+    score: Mapped[float | None] = mapped_column(Double)
+    details: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Prediction(id={self.id}, model={self.model_name}, "
+            f"type={self.prediction_type}, score={self.score})>"
+        )
+
+
+class MetricMetadata(Base):
+    """Agent self-registration metadata.
+
+    Updated on each agent startup to track which hosts are
+    reporting and their system capabilities.
+    """
+
+    __tablename__ = "metric_metadata"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    os_name: Mapped[str | None] = mapped_column(String(100))
+    os_version: Mapped[str | None] = mapped_column(String(100))
+    kernel_version: Mapped[str | None] = mapped_column(String(100))
+    cpu_count: Mapped[int | None] = mapped_column(Integer)
+    total_memory: Mapped[int | None] = mapped_column(BigInteger)
+    agent_version: Mapped[str | None] = mapped_column(String(50))
+    first_seen: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_seen: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"<MetricMetadata(hostname={self.hostname}, agent={self.agent_version})>"
