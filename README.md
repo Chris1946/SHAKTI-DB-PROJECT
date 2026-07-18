@@ -156,6 +156,7 @@ Full OpenAPI docs available at `http://localhost:8000/docs` when running.
 - [ ] **Phase 3**: AI anomaly detection & root cause analysis
 - [ ] **Phase 4**: Docker Compose production deployment
 - [ ] **Phase 5**: eBPF agent replacement
+- [ ] **Phase 6**: Developer Intelligence Platform (Interactive OS Sandbox)
 
 ## Contributing
 

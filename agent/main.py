@@ -32,6 +32,17 @@ from collectors.memory import MemoryCollector
 from collectors.disk import DiskCollector
 from collectors.network import NetworkCollector
 from collectors.process import ProcessCollector
+from collectors.thermal import ThermalCollector
+from collectors.discovery import collect_system_profile
+
+# Try to load eBPF collectors; gracefully degrade if unavailable
+EBPF_AVAILABLE = False
+try:
+    from collectors.ebpf import EBPFDiskCollector, EBPFNetworkCollector
+    EBPF_AVAILABLE = True
+except ImportError as e:
+    # This will happen on macOS or Linux without BCC installed
+    pass
 from sender.http_sender import HTTPSender
 
 # ============================================================
@@ -55,8 +66,9 @@ logger = logging.getLogger("pulsetrace.agent")
 COLLECTOR_MAP = {
     "cpu": CPUCollector,
     "memory": MemoryCollector,
-    "disk": DiskCollector,
-    "network": NetworkCollector,
+    "disk": EBPFDiskCollector if EBPF_AVAILABLE else DiskCollector,
+    "network": EBPFNetworkCollector if EBPF_AVAILABLE else NetworkCollector,
+    "thermal": ThermalCollector,
     "process": lambda: ProcessCollector(top_n=config.top_processes),
 }
 
@@ -123,6 +135,7 @@ class PulseTraceAgent:
             "net_bytes_sent", "net_bytes_recv",
             "net_packets_sent", "net_packets_recv",
             "net_errin", "net_errout", "net_dropin", "net_dropout",
+            "cpu_temp_current", "cpu_temp_high", "cpu_temp_critical", "cpu_throttled",
         ]
 
         for field in system_fields:
@@ -153,6 +166,10 @@ class PulseTraceAgent:
 
         logger.info("=" * 60)
         logger.info("PulseTrace Agent v%s starting", self.config.agent_version)
+        if EBPF_AVAILABLE:
+            logger.info("Running in eBPF HIGH-PERFORMANCE mode")
+        else:
+            logger.info("Running in psutil FALLBACK mode (eBPF unavailable/macOS)")
         logger.info(self.config.summary())
         logger.info("=" * 60)
 
@@ -162,6 +179,9 @@ class PulseTraceAgent:
         # Check backend connectivity
         if await self.sender.health_check():
             logger.info("Backend connection verified: %s", self.config.backend_url)
+            # Send system profile
+            profile = collect_system_profile()
+            await self.sender.send_profile(profile)
         else:
             logger.warning(
                 "Backend not reachable at %s — will retry on each collection cycle",

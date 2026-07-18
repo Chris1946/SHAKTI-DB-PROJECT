@@ -23,6 +23,7 @@ from app.schemas.metrics import (
     MetricsBatchResponse,
     SystemMetricResponse,
 )
+from app.models.memory import SystemMemory
 from app.services.metric_service import MetricService
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,51 @@ async def ingest_metrics(
             status_code=500,
             detail=f"Failed to ingest metrics: {str(exc)}",
         )
+
+from pydantic import BaseModel
+class SystemProfileSchema(BaseModel):
+    hostname: str
+    os_name: str = None
+    os_version: str = None
+    kernel_version: str = None
+    architecture: str = None
+    cpu_model: str = None
+    cpu_cores: int = None
+    cpu_threads: int = None
+    total_memory: int = None
+    ebpf_support: bool = False
+    profile: dict = {}
+
+@router.post(
+    "/system-profile",
+    status_code=201,
+    summary="Ingest System Intelligence Profile",
+    description="Stores static and semi-static host details.",
+)
+async def ingest_system_profile(
+    profile: SystemProfileSchema,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        from sqlalchemy import select, update
+        
+        # Upsert logic
+        existing = await db.execute(select(SystemMemory).where(SystemMemory.hostname == profile.hostname))
+        sys_mem = existing.scalar_one_or_none()
+        
+        if sys_mem:
+            for k, v in profile.model_dump().items():
+                setattr(sys_mem, k, v)
+        else:
+            sys_mem = SystemMemory(**profile.model_dump())
+            db.add(sys_mem)
+            
+        await db.commit()
+        return {"status": "success"}
+    except Exception as exc:
+        logger.error(f"Failed to ingest system profile: {exc}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to ingest profile")
 
 
 @router.get(

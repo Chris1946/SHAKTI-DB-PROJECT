@@ -12,6 +12,7 @@ All configuration is accessed through the singleton `settings` object:
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from typing import List
 
@@ -37,7 +38,8 @@ class Settings(BaseSettings):
 
     # ---- Database ----
     database_url: str = (
-        "postgresql+asyncpg://pulsetrace:changeme@localhost:5432/shakthidb"
+        os.getenv("DATABASE_URL") or 
+        "postgresql+asyncpg://postgres@localhost:5432/shakthidb"
     )
     db_pool_size: int = 10
     db_max_overflow: int = 20
@@ -63,6 +65,16 @@ class Settings(BaseSettings):
     alert_memory_warning: float = 85.0
     alert_disk_critical: float = 90.0
     alert_disk_warning: float = 80.0
+
+    # ---- LLM Configuration ----
+    llm_provider: str = "grok"
+    llm_model: str = "llama-3.3-70b-versatile"
+    llm_api_key: str = "" # Alias for GROQ_API_KEY
+    llm_temperature: float = 0.15
+    llm_top_p: float = 0.9
+    llm_max_tokens: int = 1200
+    llm_timeout: int = 30
+
 
     @field_validator("cors_origins", mode="before")
     @classmethod

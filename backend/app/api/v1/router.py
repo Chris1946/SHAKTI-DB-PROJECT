@@ -9,11 +9,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import alerts, health, metrics
+from app.api.v1 import alerts, health, metrics, processes, ai, intelligence
 
 router = APIRouter(prefix="/api/v1")
 
 # Mount route groups
 router.include_router(health.router)
 router.include_router(metrics.router)
+router.include_router(processes.router)
 router.include_router(alerts.router)
+router.include_router(ai.router)
+router.include_router(intelligence.router)

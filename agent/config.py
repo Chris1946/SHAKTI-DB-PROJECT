@@ -70,7 +70,7 @@ class AgentConfig:
 
     # Enabled collectors
     enabled_collectors: List[str] = field(
-        default_factory=lambda: ["cpu", "memory", "disk", "network", "process"]
+        default_factory=lambda: ["cpu", "memory", "disk", "network", "thermal", "process"]
     )
 
     def __post_init__(self) -> None:
@@ -79,6 +79,14 @@ class AgentConfig:
             raise ValueError("COLLECTION_INTERVAL must be >= 1 second")
         if self.top_processes < 1:
             raise ValueError("TOP_PROCESSES must be >= 1")
+            
+        # Security Analyst: Check for unencrypted API keys
+        if self.api_key and self.backend_url.startswith("http://") and "localhost" not in self.backend_url and "127.0.0.1" not in self.backend_url:
+            import logging
+            logging.getLogger("pulsetrace.security").warning(
+                "CRITICAL SECURITY WARNING: API Key is configured but backend URL uses unencrypted HTTP. "
+                "Your API key will be transmitted in plaintext. Use HTTPS for production."
+            )
 
     def summary(self) -> str:
         """Return a human-readable configuration summary."""

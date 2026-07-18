@@ -30,7 +30,11 @@ class MemoryCollector(BaseCollector):
         # Virtual memory (RAM)
         vm = psutil.virtual_memory()
         data["memory_total"] = vm.total
-        data["memory_used"] = vm.used
+        # On macOS, vm.used excludes compressed memory and cached files,
+        # which makes it much lower than what Activity Monitor reports.
+        # Using (total - available) gives the true "in-use" memory that
+        # matches Activity Monitor's "Memory Used" figure.
+        data["memory_used"] = vm.total - vm.available
         data["memory_available"] = vm.available
         data["memory_percent"] = vm.percent
 

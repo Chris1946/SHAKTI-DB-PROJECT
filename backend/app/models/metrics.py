@@ -12,6 +12,7 @@ table metadata management.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import (
     BigInteger,
@@ -49,44 +50,50 @@ class SystemMetric(Base):
     )
 
     # CPU
-    cpu_percent: Mapped[float | None] = mapped_column(Double)
-    cpu_per_core: Mapped[dict | None] = mapped_column(JSONB)
-    cpu_freq_mhz: Mapped[float | None] = mapped_column(Double)
+    cpu_percent: Mapped[Optional[float]] = mapped_column(Double)
+    cpu_per_core: Mapped[Optional[dict]] = mapped_column(JSONB)
+    cpu_freq_mhz: Mapped[Optional[float]] = mapped_column(Double)
 
     # Load averages
-    load_avg_1: Mapped[float | None] = mapped_column(Double)
-    load_avg_5: Mapped[float | None] = mapped_column(Double)
-    load_avg_15: Mapped[float | None] = mapped_column(Double)
+    load_avg_1: Mapped[Optional[float]] = mapped_column(Double)
+    load_avg_5: Mapped[Optional[float]] = mapped_column(Double)
+    load_avg_15: Mapped[Optional[float]] = mapped_column(Double)
 
     # Memory
-    memory_total: Mapped[int | None] = mapped_column(BigInteger)
-    memory_used: Mapped[int | None] = mapped_column(BigInteger)
-    memory_available: Mapped[int | None] = mapped_column(BigInteger)
-    memory_percent: Mapped[float | None] = mapped_column(Double)
-    swap_total: Mapped[int | None] = mapped_column(BigInteger)
-    swap_used: Mapped[int | None] = mapped_column(BigInteger)
-    swap_percent: Mapped[float | None] = mapped_column(Double)
+    memory_total: Mapped[Optional[int]] = mapped_column(BigInteger)
+    memory_used: Mapped[Optional[int]] = mapped_column(BigInteger)
+    memory_available: Mapped[Optional[int]] = mapped_column(BigInteger)
+    memory_percent: Mapped[Optional[float]] = mapped_column(Double)
+    swap_total: Mapped[Optional[int]] = mapped_column(BigInteger)
+    swap_used: Mapped[Optional[int]] = mapped_column(BigInteger)
+    swap_percent: Mapped[Optional[float]] = mapped_column(Double)
 
     # Disk
-    disk_total: Mapped[int | None] = mapped_column(BigInteger)
-    disk_used: Mapped[int | None] = mapped_column(BigInteger)
-    disk_free: Mapped[int | None] = mapped_column(BigInteger)
-    disk_percent: Mapped[float | None] = mapped_column(Double)
-    disk_read_bytes: Mapped[int | None] = mapped_column(BigInteger)
-    disk_write_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    disk_total: Mapped[Optional[int]] = mapped_column(BigInteger)
+    disk_used: Mapped[Optional[int]] = mapped_column(BigInteger)
+    disk_free: Mapped[Optional[int]] = mapped_column(BigInteger)
+    disk_percent: Mapped[Optional[float]] = mapped_column(Double)
+    disk_read_bytes: Mapped[Optional[int]] = mapped_column(BigInteger)
+    disk_write_bytes: Mapped[Optional[int]] = mapped_column(BigInteger)
 
     # Network
-    net_bytes_sent: Mapped[int | None] = mapped_column(BigInteger)
-    net_bytes_recv: Mapped[int | None] = mapped_column(BigInteger)
-    net_packets_sent: Mapped[int | None] = mapped_column(BigInteger)
-    net_packets_recv: Mapped[int | None] = mapped_column(BigInteger)
-    net_errin: Mapped[int | None] = mapped_column(BigInteger, default=0)
-    net_errout: Mapped[int | None] = mapped_column(BigInteger, default=0)
-    net_dropin: Mapped[int | None] = mapped_column(BigInteger, default=0)
-    net_dropout: Mapped[int | None] = mapped_column(BigInteger, default=0)
+    net_bytes_sent: Mapped[Optional[int]] = mapped_column(BigInteger)
+    net_bytes_recv: Mapped[Optional[int]] = mapped_column(BigInteger)
+    net_packets_sent: Mapped[Optional[int]] = mapped_column(BigInteger)
+    net_packets_recv: Mapped[Optional[int]] = mapped_column(BigInteger)
+    net_errin: Mapped[Optional[int]] = mapped_column(BigInteger, default=0)
+    net_errout: Mapped[Optional[int]] = mapped_column(BigInteger, default=0)
+    net_dropin: Mapped[Optional[int]] = mapped_column(BigInteger, default=0)
+    net_dropout: Mapped[Optional[int]] = mapped_column(BigInteger, default=0)
+
+    # Thermal
+    cpu_temp_current: Mapped[Optional[float]] = mapped_column(Double)
+    cpu_temp_high: Mapped[Optional[float]] = mapped_column(Double)
+    cpu_temp_critical: Mapped[Optional[float]] = mapped_column(Double)
+    cpu_throttled: Mapped[Optional[bool]] = mapped_column(Boolean)
 
     # Extensibility
-    extra: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    extra: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
@@ -116,14 +123,14 @@ class ProcessMetric(Base):
     )
 
     pid: Mapped[int] = mapped_column(Integer, nullable=False)
-    name: Mapped[str | None] = mapped_column(String(255))
-    username: Mapped[str | None] = mapped_column(String(255))
-    status: Mapped[str | None] = mapped_column(String(50))
-    cpu_percent: Mapped[float | None] = mapped_column(Double)
-    memory_percent: Mapped[float | None] = mapped_column(Double)
-    memory_rss: Mapped[int | None] = mapped_column(BigInteger)
-    num_threads: Mapped[int | None] = mapped_column(Integer)
-    command: Mapped[str | None] = mapped_column(Text)
+    name: Mapped[Optional[str]] = mapped_column(String(255))
+    username: Mapped[Optional[str]] = mapped_column(String(255))
+    status: Mapped[Optional[str]] = mapped_column(String(50))
+    cpu_percent: Mapped[Optional[float]] = mapped_column(Double)
+    memory_percent: Mapped[Optional[float]] = mapped_column(Double)
+    memory_rss: Mapped[Optional[int]] = mapped_column(BigInteger)
+    num_threads: Mapped[Optional[int]] = mapped_column(Integer)
+    command: Mapped[Optional[str]] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -150,14 +157,14 @@ class Alert(Base):
     severity: Mapped[str] = mapped_column(String(20), nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    metric_value: Mapped[float | None] = mapped_column(Double)
-    threshold: Mapped[float | None] = mapped_column(Double)
+    metric_value: Mapped[Optional[float]] = mapped_column(Double)
+    threshold: Mapped[Optional[float]] = mapped_column(Double)
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="rule_engine")
     resolved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     def __repr__(self) -> str:
         return (
@@ -178,9 +185,9 @@ class Prediction(Base):
     hostname: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
     prediction_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    category: Mapped[str | None] = mapped_column(String(50))
-    score: Mapped[float | None] = mapped_column(Double)
-    details: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    category: Mapped[Optional[str]] = mapped_column(String(50))
+    score: Mapped[Optional[float]] = mapped_column(Double)
+    details: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -203,12 +210,12 @@ class MetricMetadata(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     hostname: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    os_name: Mapped[str | None] = mapped_column(String(100))
-    os_version: Mapped[str | None] = mapped_column(String(100))
-    kernel_version: Mapped[str | None] = mapped_column(String(100))
-    cpu_count: Mapped[int | None] = mapped_column(Integer)
-    total_memory: Mapped[int | None] = mapped_column(BigInteger)
-    agent_version: Mapped[str | None] = mapped_column(String(50))
+    os_name: Mapped[Optional[str]] = mapped_column(String(100))
+    os_version: Mapped[Optional[str]] = mapped_column(String(100))
+    kernel_version: Mapped[Optional[str]] = mapped_column(String(100))
+    cpu_count: Mapped[Optional[int]] = mapped_column(Integer)
+    total_memory: Mapped[Optional[int]] = mapped_column(BigInteger)
+    agent_version: Mapped[Optional[str]] = mapped_column(String(50))
     first_seen: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

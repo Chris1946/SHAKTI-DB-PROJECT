@@ -9,3 +9,12 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 alembic>=1.14.0
+
+# AI Engine
+scikit-learn==1.4.1.post1
+pandas==2.2.1
+numpy==1.26.4
+openai>=1.40.0
+pgvector>=0.2.5
+sentence-transformers>=2.2.2
+

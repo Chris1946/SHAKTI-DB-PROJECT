@@ -66,13 +66,17 @@ class ProcessCollector(BaseCollector):
                 if info.get("status") in ("zombie", "dead"):
                     continue
 
+                # Some OS processes might return None for CPU/Memory, handle safely
+                cpu_pct = info.get("cpu_percent") or 0.0
+                mem_pct = info.get("memory_percent") or 0.0
+
                 proc_data = {
                     "pid": info["pid"],
                     "name": info.get("name", "unknown"),
                     "username": info.get("username"),
                     "status": info.get("status"),
-                    "cpu_percent": info.get("cpu_percent", 0.0),
-                    "memory_percent": round(info.get("memory_percent", 0.0), 2),
+                    "cpu_percent": round(cpu_pct, 2),
+                    "memory_percent": round(mem_pct, 2),
                     "memory_rss": (
                         info["memory_info"].rss
                         if info.get("memory_info")

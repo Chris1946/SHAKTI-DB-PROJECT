@@ -68,6 +68,12 @@ class SystemMetricCreate(BaseModel):
     net_dropin: Optional[int] = Field(0, ge=0, description="Inbound drops")
     net_dropout: Optional[int] = Field(0, ge=0, description="Outbound drops")
 
+    # Thermal
+    cpu_temp_current: Optional[float] = Field(None, description="Current CPU temperature °C")
+    cpu_temp_high: Optional[float] = Field(None, description="High threshold °C")
+    cpu_temp_critical: Optional[float] = Field(None, description="Critical threshold °C")
+    cpu_throttled: Optional[bool] = Field(None, description="Whether CPU is thermally throttled")
+
     # Extensibility
     extra: Optional[dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
 

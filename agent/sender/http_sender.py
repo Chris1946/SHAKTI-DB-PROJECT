@@ -132,6 +132,19 @@ class HTTPSender:
 
         return False
 
+    async def send_profile(self, profile: Dict[str, Any]) -> bool:
+        """Send System Intelligence Profile to the backend."""
+        client = await self._get_client()
+        try:
+            response = await client.post("/api/v1/metrics/system-profile", json=profile)
+            if response.status_code in (200, 201):
+                logger.info("System profile sent successfully.")
+                return True
+            logger.warning(f"Failed to send system profile: {response.status_code} - {response.text}")
+        except Exception as e:
+            logger.error(f"Error sending system profile: {e}")
+        return False
+
     async def health_check(self) -> bool:
         """Check if the backend is reachable.
 

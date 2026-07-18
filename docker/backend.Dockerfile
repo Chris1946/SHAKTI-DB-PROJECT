@@ -33,8 +33,9 @@ RUN apt-get update && \
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application code
+# Copy application code and AI worker
 COPY backend/app ./app
+COPY backend/ai_worker.py ./ai_worker.py
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser

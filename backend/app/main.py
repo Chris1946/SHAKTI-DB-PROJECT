@@ -25,7 +25,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.router import router as v1_router
 from app.config import settings
-from app.database.connection import dispose_engine
+from app.database.connection import engine, dispose_engine
+from app.models.metrics import Base
 
 # ============================================================
 # Logging Configuration
@@ -102,6 +103,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("API Key Auth: %s", "ENABLED" if settings.api_key_enabled else "DISABLED")
     logger.info("Log Level: %s", settings.log_level)
     logger.info("=" * 60)
+
+    # Initialize database tables
+    try:
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            # Enable pgvector extension before creating tables
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database schema validated/initialized")
+    except Exception as e:
+        logger.error("Failed to initialize database schema: %s", e)
 
     yield
 

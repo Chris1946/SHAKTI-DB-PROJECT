@@ -5,7 +5,8 @@
 #   docker compose up -d
 #
 # This brings up:
-#   - PostgreSQL 16 (ShakthiDB) on port 5432
+#   - ShaktiDB (PostgreSQL 17 fork by IIT Madras) on port 5432
+#   - Schema init container (runs once, creates tables)
 #   - FastAPI Backend on port 8000
 #
 # The agent runs outside Docker (on the host or target machine)
@@ -13,27 +14,25 @@
 # ============================================================
 
 services:
-  # ---- PostgreSQL (ShakthiDB) ----
-  postgres:
-    image: postgres:16-alpine
-    container_name: pulsetrace-db
-    restart: unless-stopped
+  # ---- ShaktiDB (PostgreSQL 17 + pgvector) ----
+  shakthidb:
+    image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-pulsetrace}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_use_strong_password}
-      POSTGRES_DB: ${POSTGRES_DB:-shakthidb}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_DB=shakthidb
+    command: postgres -c listen_addresses='*'
+    container_name: pulsetrace-shakthidb
+    restart: unless-stopped
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       # Persist data across container restarts
       - pgdata:/var/lib/postgresql/data
-      # Initialize schema on first run
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsetrace} -d ${POSTGRES_DB:-shakthidb}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
       start_period: 10s
 
   # ---- FastAPI Backend ----
@@ -44,14 +43,25 @@ services:
     container_name: pulsetrace-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pulsetrace}:${POSTGRES_PASSWORD:-changeme_use_strong_password}@postgres:5432/${POSTGRES_DB:-shakthidb}
+      DATABASE_URL: postgresql+asyncpg://postgres@shakthidb:5432/shakthidb
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
       API_KEY: ${API_KEY:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
-      postgres:
+      shakthidb:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()"]
@@ -59,6 +69,32 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+  # ---- AI Anomaly Engine Worker ----
+  ai_worker:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: pulsetrace-ai-worker
+    restart: unless-stopped
+    command: ["python", "ai_worker.py"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres@shakthidb:5432/shakthidb
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    depends_on:
+      shakthidb:
+        condition: service_healthy
 
 volumes:
   pgdata:
