@@ -152,10 +152,10 @@ Full OpenAPI docs available at `http://localhost:8000/docs` when running.
 ## Roadmap
 
 - [x] **Phase 1**: Data pipeline (Agent → Backend → PostgreSQL)
-- [ ] **Phase 2**: React dashboard with live graphs
-- [ ] **Phase 3**: AI anomaly detection & root cause analysis
-- [ ] **Phase 4**: Docker Compose production deployment
-- [ ] **Phase 5**: eBPF agent replacement
+- [x] **Phase 2**: Native Desktop Dashboard (PySide6) with live visualization
+- [x] **Phase 3**: AI anomaly detection & root cause analysis (Integrated in backend)
+- [x] **Phase 4**: Docker Compose production deployment & GitHub Actions cross-platform build
+- [x] **Phase 5**: Agent deployment (Using `psutil` on macOS due to SIP, eBPF codebase built)
 - [ ] **Phase 6**: Developer Intelligence Platform (Interactive OS Sandbox)
 
 ## Contributing
