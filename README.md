@@ -96,18 +96,16 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### 4. View Metrics
+### 4. View Metrics (Native Desktop App)
 
-```bash
-# Latest metrics
-curl http://localhost:8000/api/v1/metrics/latest
+You don't need to build the UI yourself! We provide pre-compiled executables for Windows, macOS, and Linux.
 
-# Historical (last hour)
-curl "http://localhost:8000/api/v1/metrics?minutes=60"
-
-# Alerts
-curl http://localhost:8000/api/v1/alerts
-```
+1. Go to the **Releases** page of this repository.
+2. Download the artifact for your OS:
+   - **Windows**: `PulseTrace-Windows.zip` (Extract and run `PulseTrace.exe`)
+   - **macOS**: `PulseTrace-macOS.dmg` (Mount and drag to Applications)
+   - **Linux**: `PulseTrace-Linux.tar.gz` (Extract and run the binary)
+3. The Desktop App will automatically connect to your local backend (`http://localhost:8000`) and visualize the live hardware metrics collected by your agent!
 
 ## Project Structure
 
