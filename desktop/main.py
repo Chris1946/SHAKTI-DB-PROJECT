@@ -66,8 +66,17 @@ def main() -> int:
     default_font = QFont(".AppleSystemUIFont", 13)
     app.setFont(default_font)
 
+    from desktop.bootstrapper import BootstrapperThread
+
     # Create and show the main window
     window = MainWindow()
+
+    # Start the bootstrapper
+    bootstrapper = BootstrapperThread()
+    window._bootstrapper = bootstrapper # keep a reference so it isn't garbage collected
+    bootstrapper.status_update.connect(lambda msg: window.statusBar().showMessage(msg))
+    bootstrapper.start()
+
     window.show()
 
     logger.info("PulseTrace Desktop window opened")

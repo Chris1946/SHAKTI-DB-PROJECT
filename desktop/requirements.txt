@@ -3,3 +3,5 @@ pyqtgraph>=0.13.3
 requests>=2.31.0
 pydantic>=2.5.0
 python-dotenv>=1.0.0
+psutil>=7.0.0
+httpx>=0.28.0

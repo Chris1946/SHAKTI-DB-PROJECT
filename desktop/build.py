@@ -29,7 +29,10 @@ def build():
         '--windowed',
         '--onedir',
         '--noconfirm',
-        '--clean'
+        '--clean',
+        '--add-data=docker-compose.yml:.',
+        '--add-data=agent:agent',
+        '--add-data=.env.example:.',
     ])
 
     print("\nBuild complete!")
