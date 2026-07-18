@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 # Copy and install Python dependencies
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --default-timeout=100 --no-cache-dir --prefix=/install -r requirements.txt
 
 
 # ---- Stage 2: Runtime ----
