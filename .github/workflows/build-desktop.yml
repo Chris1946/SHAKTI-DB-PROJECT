@@ -82,11 +82,11 @@ jobs:
       - name: Package Windows & Linux artifacts
         run: |
           cd artifacts
-          if [ -d "PulseTrace-Windows/PulseTrace" ]; then
-            zip -r PulseTrace-Windows.zip PulseTrace-Windows/PulseTrace
+          if [ -d "PulseTrace-Windows" ]; then
+            zip -r PulseTrace-Windows.zip PulseTrace-Windows
           fi
-          if [ -d "PulseTrace-Linux/PulseTrace" ]; then
-            tar -czvf PulseTrace-Linux.tar.gz -C PulseTrace-Linux PulseTrace
+          if [ -d "PulseTrace-Linux" ]; then
+            tar -czvf PulseTrace-Linux.tar.gz -C PulseTrace-Linux .
           fi
 
       - name: Create Release
