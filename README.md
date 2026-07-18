@@ -71,8 +71,8 @@
 ### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/your-username/PulseTrace.git
-cd PulseTrace
+git clone https://github.com/Chris1946/SHAKTI-DB-PROJECT.git
+cd SHAKTI-DB-PROJECT
 cp .env.example .env
 # Edit .env with secure passwords
 ```
