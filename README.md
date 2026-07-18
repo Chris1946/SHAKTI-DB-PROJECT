@@ -83,8 +83,8 @@ cp .env.example .env
 # Start PostgreSQL + Backend
 docker compose up -d
 
-# Verify
-curl http://localhost:8000/api/v1/health
+# Check if the backend is running (it may take 15-30 seconds to start the first time)
+docker compose logs -f backend
 ```
 
 ### 3. Run the Agent
