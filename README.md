@@ -74,29 +74,23 @@
 git clone https://github.com/Chris1946/SHAKTI-DB-PROJECT.git
 cd SHAKTI-DB-PROJECT
 cp .env.example .env
-# Edit .env with secure passwords
-```
+### 2. Run the 1-Click Start Script
 
-### 2. Start the Stack
+We've provided a simple script that automatically copies the `.env` file, spins up the Docker backend, installs Python dependencies, and launches the background agent for you!
 
+**On macOS / Linux:**
 ```bash
-# Start PostgreSQL + Backend
-docker compose up -d
-
-# Check if the backend is running (it may take 15-30 seconds to start the first time)
-docker compose logs -f backend
+./start.sh
 ```
 
-### 3. Run the Agent
-
-```bash
-cd agent
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python main.py
+**On Windows:**
+```cmd
+start.bat
 ```
 
-### 4. View Metrics (Native Desktop App)
+*(Note: The script will start the backend at `http://localhost:8000` and silently run the data collector agent in the background).*
+
+### 3. View Metrics (Native Desktop App)
 
 You don't need to build the UI yourself! We provide pre-compiled executables for Windows, macOS, and Linux.
 
@@ -105,7 +99,7 @@ You don't need to build the UI yourself! We provide pre-compiled executables for
    - **Windows**: `PulseTrace-Windows.zip` (Extract and run `PulseTrace.exe`)
    - **macOS**: `PulseTrace-macOS.dmg` (Mount and drag to Applications)
    - **Linux**: `PulseTrace-Linux.tar.gz` (Extract and run the binary)
-3. The Desktop App will automatically connect to your local backend (`http://localhost:8000`) and visualize the live hardware metrics collected by your agent!
+3. The Desktop App will automatically connect to your local backend and visualize the live hardware metrics collected by your agent!
 
 ## Project Structure
 
