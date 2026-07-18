@@ -81,7 +81,74 @@ class TelemetrySimulator(QObject):
 
     def update_live_telemetry(self, procs: List[tuple[str, int]], metrics: Dict):
         """Used by the system-wide Digital Twin."""
-        pass # We use authentic telemetry instead now.
+        if self.engine.time_manager.paused:
+            return
+
+        tm = self.engine.time_manager.multiplier
+        if tm <= 0:
+            return
+
+        self._live_processes = procs if procs else _PROCESS_NAMES
+        self._real_cpu_scale = max(0.5, (metrics.get("cpu_percent", 10.0) / 100.0) * 5.0)
+
+        # We will spawn a burst of packets to visualize the current OS load
+        # Use CPU scale to determine how many packets
+        burst_size = int(5 * self._real_cpu_scale * tm)
+        for _ in range(burst_size):
+            proc_name, pid = random.choice(self._live_processes)
+            proc_label = f"{proc_name} (PID {pid})"
+
+            # Randomly pick a subsystem to visualize
+            activity = random.choice(["network", "disk", "cpu", "memory"])
+
+            if activity == "network":
+                route = ["app", "syscall", "netstack", "nic", "internet"]
+                color = "#60a5fa"
+                proto = random.choice(_PROTOCOLS)
+                ip, domain = random.choice(_REMOTE_IPS)
+                metadata = {
+                    "type": "Network Packet",
+                    "process": proc_label,
+                    "protocol": proto,
+                    "remote_ip": ip,
+                    "domain": domain,
+                    "authentic": False
+                }
+            elif activity == "disk":
+                route = ["app", "syscall", "vfs", "iosched", "ssd"]
+                color = "#fbbf24"
+                metadata = {
+                    "type": "Disk I/O",
+                    "process": proc_label,
+                    "operation": random.choice(_DISK_OPS),
+                    "authentic": False
+                }
+            elif activity == "cpu":
+                route = ["app", "syscall", "scheduler", "cpu"]
+                color = "#34d399"
+                metadata = {
+                    "type": "CPU Context Switch",
+                    "process": proc_label,
+                    "policy": random.choice(_SCHED_POLICIES),
+                    "authentic": False
+                }
+            else:
+                route = ["app", "syscall", "mmu", "ram"]
+                color = "#c084fc"
+                metadata = {
+                    "type": "Memory Allocation",
+                    "process": proc_label,
+                    "syscall": random.choice(["mmap", "brk", "mprotect"]),
+                    "authentic": False
+                }
+            
+            # 50% chance to go container route instead of app if it's docker/containerd
+            if "docker" in proc_name.lower() or "container" in proc_name.lower():
+                route[0] = "container"
+            elif "postgres" in proc_name.lower() or "redis" in proc_name.lower():
+                route[0] = "database"
+
+            self._spawn_route(route, color, speed=0.5, metadata=metadata)
 
     def update_authentic_telemetry(self, telemetry: dict):
         """Processes real-time telemetry from the Sandbox backend."""
