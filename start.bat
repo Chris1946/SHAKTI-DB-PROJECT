@@ -5,6 +5,40 @@ echo ========================================
 echo       🚀 Starting PulseTrace Stack       
 echo ========================================
 
+:: --- Dependency Checks ---
+
+:: Check Python
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [!] Python is not installed.
+    set /p install_py="Would you like to install Python using winget? (y/n): "
+    if /i "!install_py!"=="y" (
+        echo [+] Installing Python...
+        winget install Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
+        echo [!] Please restart this script after installation completes.
+        exit /b 0
+    ) else (
+        echo [-] Python is required. Exiting.
+        exit /b 1
+    )
+)
+
+:: Check Docker
+docker --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [!] Docker is not installed.
+    set /p install_docker="Would you like to install Docker Desktop using winget? (y/n): "
+    if /i "!install_docker!"=="y" (
+        echo [+] Installing Docker Desktop...
+        winget install Docker.DockerDesktop --silent --accept-package-agreements --accept-source-agreements
+        echo [!] Please open Docker Desktop, finish the setup, and restart this script.
+        exit /b 0
+    ) else (
+        echo [-] Docker is required. Exiting.
+        exit /b 1
+    )
+)
+
 :: 1. Setup Environment
 if not exist ".env" (
     echo [+] Creating .env file from .env.example
