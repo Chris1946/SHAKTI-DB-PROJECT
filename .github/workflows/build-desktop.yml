@@ -1,0 +1,99 @@
+name: Build Desktop Executables
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: PulseTrace-Linux
+          - os: macos-latest
+            artifact_name: PulseTrace-macOS
+          - os: windows-latest
+            artifact_name: PulseTrace-Windows
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: desktop/requirements.txt
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r desktop/requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable
+        run: |
+          pyinstaller --noconfirm --onedir --windowed --name "PulseTrace" "desktop/main.py"
+
+      - name: Prepare Artifacts (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd dist
+          tar -czvf PulseTrace-macOS.tar.gz PulseTrace.app
+
+      - name: Upload Artifact (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/PulseTrace-macOS.tar.gz
+
+      - name: Upload Artifact (Windows & Linux)
+        if: runner.os != 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/PulseTrace
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package Windows & Linux artifacts
+        run: |
+          cd artifacts
+          if [ -d "PulseTrace-Windows/PulseTrace" ]; then
+            zip -r PulseTrace-Windows.zip PulseTrace-Windows/PulseTrace
+          fi
+          if [ -d "PulseTrace-Linux/PulseTrace" ]; then
+            tar -czvf PulseTrace-Linux.tar.gz -C PulseTrace-Linux PulseTrace
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/PulseTrace-Windows.zip
+            artifacts/PulseTrace-Linux.tar.gz
+            artifacts/PulseTrace-macOS/PulseTrace-macOS.tar.gz
+          generate_release_notes: true
