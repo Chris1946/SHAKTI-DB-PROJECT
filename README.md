@@ -62,44 +62,55 @@
 
 ## Quick Start
 
-### Prerequisites
+We provide two ways to use PulseTrace: **End User Mode** (just download and double-click the app) and **Developer Mode** (clone the repo and run from source).
 
-- Docker & Docker Compose
-- Python 3.11+
-- Node.js 18+ (for frontend)
+### 🖥️ Option 1: End User Mode (1-Click App)
+*Use this if you just want to run the platform without dealing with code or terminals.*
 
-### 1. Clone & Configure
+**Prerequisite:** You must have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running on your computer.
 
+1. Go to the **Releases** page of this repository.
+2. Download the artifact for your OS:
+   - **Windows**: `PulseTrace-Windows.zip` (Extract and run `PulseTrace.exe`)
+   - **macOS**: `PulseTrace-macOS.dmg` (Mount and open the `PulseTrace` app)
+   - **Linux**: `PulseTrace-Linux.tar.gz` (Extract and run the binary)
+3. **Open the app!** That's it. 
+   - The Desktop App has an **auto-bootstrapper**. It will automatically spin up the Docker database in the background.
+   - It will automatically launch the internal data collection agent.
+   - Live metrics will begin flowing into the dashboard within 15 seconds.
+
+---
+
+### 💻 Option 2: Developer Mode (Run from Source)
+*Use this if you want to modify the Python code, customize the agent, or contribute.*
+
+**Prerequisite:** Docker and Python 3.11+.
+
+#### 1. Clone the Repository
 ```bash
 git clone https://github.com/Chris1946/SHAKTI-DB-PROJECT.git
 cd SHAKTI-DB-PROJECT
-cp .env.example .env
-### 2. Run the 1-Click Start Script
+```
 
-We've provided a simple script that automatically copies the `.env` file, spins up the Docker backend, installs Python dependencies, and launches the background agent for you!
+#### 2. Run the 1-Click Start Script
+We've provided a simple script that sets up your `.env`, spins up the Docker backend, installs Python dependencies, and launches the background agent.
 
 **On macOS / Linux:**
 ```bash
 ./start.sh
 ```
-
 **On Windows:**
 ```cmd
 start.bat
 ```
+*(The script will automatically prompt you to install Docker or Python if you don't have them!)*
 
-*(Note: The script will start the backend at `http://localhost:8000` and silently run the data collector agent in the background).*
-
-### 3. View Metrics (Native Desktop App)
-
-You don't need to build the UI yourself! We provide pre-compiled executables for Windows, macOS, and Linux.
-
-1. Go to the **Releases** page of this repository.
-2. Download the artifact for your OS:
-   - **Windows**: `PulseTrace-Windows.zip` (Extract and run `PulseTrace.exe`)
-   - **macOS**: `PulseTrace-macOS.dmg` (Mount and drag to Applications)
-   - **Linux**: `PulseTrace-Linux.tar.gz` (Extract and run the binary)
-3. The Desktop App will automatically connect to your local backend and visualize the live hardware metrics collected by your agent!
+#### 3. Launch the Desktop UI
+Once the backend and agent are running, launch the UI directly from the source code:
+```bash
+pip install -r desktop/requirements.txt
+python desktop/main.py
+```
 
 ## Project Structure
 

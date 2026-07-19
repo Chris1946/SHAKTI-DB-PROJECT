@@ -49,7 +49,7 @@ jobs:
 
       - name: Build Executable
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name "PulseTrace" "desktop/main.py"
+          pyinstaller --noconfirm --onedir --windowed --name "PulseTrace" --add-data="docker-compose.yml:." --add-data="agent:agent" --add-data=".env.example:." "desktop/main.py"
 
       - name: Prepare Artifacts (macOS)
         if: runner.os == 'macOS'
