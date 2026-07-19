@@ -79,6 +79,10 @@ We provide two ways to use PulseTrace: **End User Mode** (just download and doub
    - It will automatically launch the internal data collection agent.
    - Live metrics will begin flowing into the dashboard within 15 seconds.
 
+> **⚠️ Troubleshooting App Launch:**
+> - **macOS:** If it says "App is damaged and can't be opened", it's because it's an unsigned app downloaded from GitHub. Open your terminal and run: `xattr -cr /Applications/PulseTrace.app` (or right-click the app and select "Open").
+> - **Windows:** If Windows SmartScreen says "Windows protected your PC", click **More info** -> **Run anyway**.
+
 ---
 
 ### 💻 Option 2: Developer Mode (Run from Source)

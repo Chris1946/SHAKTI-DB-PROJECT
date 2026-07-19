@@ -52,6 +52,13 @@ class BootstrapperThread(QThread):
             # but we are in a QThread, so subprocess.run is fine.
             # Using Popen to capture output if needed, but run is simpler.
             env = os.environ.copy()
+            # Ensure common docker paths are in PATH for macOS/Linux GUI apps
+            extra_paths = "/usr/local/bin:/opt/homebrew/bin:/opt/local/bin"
+            if "PATH" in env:
+                env["PATH"] = f"{extra_paths}:{env['PATH']}"
+            else:
+                env["PATH"] = extra_paths
+
             subprocess.run(
                 ["docker", "compose", "up", "-d"],
                 cwd=base_path,
